@@ -275,8 +275,11 @@ export class Bullmq implements INodeType {
 							key = encryption.inlineKey as string;
 						} else {
 							try {
+								const creds = await this.getCredentials('bullMqEncryptionKeyApi');
+								key = (creds as any)?.key as string;
 							} catch (error) {
-								console.error('Error retrieving bullMqEncryptionKeyApi credentials:', error);
+								// @ts-ignore
+								console.debug('bullMqEncryptionKeyApi credential not available:', error?.message ?? error);
 							}
 						}
 						if (!key) {
