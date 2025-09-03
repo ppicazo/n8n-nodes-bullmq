@@ -23,6 +23,7 @@ type IAddOptions = {
 	removeOnFail: DefaultJobOptions['removeOnFail'];
 	timeToLive: number;
 	returnValue: boolean;
+	jobId?: string;
 };
 
 type INodeParameters = {
@@ -68,6 +69,13 @@ export class Bullmq implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				options: [
+					{
+						displayName: 'Job ID',
+						name: 'jobId',
+						type: 'string',
+						default: '',
+						description: 'Custom job ID to assign to the job (optional)',
+					},
 					{
 						name: 'Add',
 						value: 'add',
@@ -248,6 +256,7 @@ export class Bullmq implements INodeType {
 						removeOnComplete = false,
 						removeOnFail = false,
 						returnValue = false,
+						jobId,
 					} = options;
 
 					const queue = await getQueue.call(this, queueName, { connection });
@@ -297,6 +306,7 @@ export class Bullmq implements INodeType {
 						lifo,
 						removeOnComplete,
 						removeOnFail,
+						...(jobId ? { jobId } : {}),
 					});
 
 					job.log(`Job added from executionId ${this.getExecutionId()}`);
