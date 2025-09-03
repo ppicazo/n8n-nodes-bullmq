@@ -203,7 +203,7 @@ export class Bullmq implements INodeType {
 						description: 'Time in milliseconds before the job should be failed',
 					},
 					{
-						displayName: 'Retunrn Value',
+						displayName: 'Return Value',
 						name: 'returnValue',
 						type: 'boolean',
 						default: false,
@@ -221,7 +221,7 @@ export class Bullmq implements INodeType {
 						name: 'priority',
 						type: 'number',
 						default: 0,
-						description: 'Priority of the jobb, from 1 to any, higher is higher priority',
+						description: 'Priority of the job, from 1 to any, higher is higher priority',
 					},
 					{
 						displayName: 'Attempts',
