@@ -1,6 +1,6 @@
 {
-  "name": "n8n-nodes-bullmq-ppicazo",
-  "version": "0.0.1",
+  "name": "n8n-nodes-bullmq",
+  "version": "0.6.0",
   "description": "N8n nodes for BullMQ",
   "keywords": [
     "n8n-community-node-package"

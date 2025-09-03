@@ -44,13 +44,13 @@ export function encryptPayload(payload: unknown, key: string | Buffer): Encrypte
 }
 
 export function isEncryptedPayload(x: unknown): x is EncryptedPayload {
-  return Boolean(
-    x &&
-      typeof x === 'object' &&
-      x.__enc &&
-      x.__enc.alg === 'aes-256-gcm' &&
-      typeof x.data === 'string',
-  );
+  if (!x || typeof x !== 'object') return false;
+  const rec = x as Record<string, unknown>;
+  const enc = rec['__enc'];
+  if (!enc || typeof enc !== 'object') return false;
+  const alg = (enc as Record<string, unknown>)['alg'];
+  const data = rec['data'];
+  return alg === 'aes-256-gcm' && typeof data === 'string';
 }
 
 export function decryptPayload(input: EncryptedPayload, key: string | Buffer): unknown {
