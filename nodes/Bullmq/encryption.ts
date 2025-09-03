@@ -43,7 +43,7 @@ export function encryptPayload(payload: unknown, key: string | Buffer): Encrypte
   };
 }
 
-export function isEncryptedPayload(x: any): x is EncryptedPayload {
+export function isEncryptedPayload(x: unknown): x is EncryptedPayload {
   return Boolean(
     x &&
       typeof x === 'object' &&
