@@ -7,6 +7,7 @@ import type {
 import { NodeOperationError } from 'n8n-workflow';
 
 import { setupRedisClient, parseAssignmentsCollection, craftJobReturnValue, parseJson } from './utils';
+import { encryptPayload } from './encryption';
 import { DefaultJobOptions, QueueEvents } from 'bullmq';
 import { getQueue, getWorkflowInfo, redisConnectionTest } from './GenericFuntions';
 
@@ -55,6 +56,10 @@ export class Bullmq implements INodeType {
 				required: true,
 				testedBy: 'redisConnectionTest',
 			},
+			{
+				name: 'bullMqEncryptionKeyApi',
+				required: false,
+			},
 		],
 		properties: [
 			{
@@ -73,194 +78,119 @@ export class Bullmq implements INodeType {
 				default: 'add',
 			},
 			{
-				displayName: "Queue Source",
-				name: "queueSource",
-				type: "options",
+				displayName: 'Queue Source',
+				name: 'queueSource',
+				type: 'options',
 				options: [
-					{
-						name: "Workflows",
-						value: "workflows",
-					},
-					{
-						name: "Custom",
-						value: "custom",
-					},
+					{ name: 'Workflows', value: 'workflows' },
+					{ name: 'Custom', value: 'custom' },
 				],
-				default: "workflows",
-				displayOptions: {
-					show: {
-						operation: ["add"],
-					},
-				},
+				default: 'workflows',
+				displayOptions: { show: { operation: ['add'] } },
 			},
 			{
 				displayName: 'Queue Name',
 				name: 'queueName',
 				type: 'string',
-				displayOptions: {
-					show: {
-						operation: ['add'],
-						queueSource: ['custom'],
-					},
-				},
+				displayOptions: { show: { operation: ['add'], queueSource: ['custom'] } },
 				default: '',
 				required: true,
 				description: 'Queue name to add the job to',
 			},
 			{
-				displayName: "Workflow",
-				name: "workflowId",
+				displayName: 'Workflow',
+				name: 'workflowId',
 				// @ts-ignore
-				type: "workflowSelector",
+				type: 'workflowSelector',
 				default: '',
 				required: true,
-				displayOptions: {
-					show: {
-						operation: ["add"],
-						queueSource: ["workflows"],
-					},
-				},
+				displayOptions: { show: { operation: ['add'], queueSource: ['workflows'] } },
 			},
 			{
 				displayName: 'Job Name',
 				name: 'jobName',
 				type: 'string',
-				displayOptions: {
-					show: {
-						operation: ['add'],
-					},
-				},
+				displayOptions: { show: { operation: ['add'] } },
 				default: '',
 				required: true,
 				description: 'Job name to publish',
 			},
-			// allow ủe to choose get data from previous node or self input
 			{
 				displayName: 'Data Source',
 				name: 'dataSource',
 				type: 'options',
-				displayOptions: {
-					show: {
-						operation: ['add'],
-					},
-				},
+				displayOptions: { show: { operation: ['add'] } },
 				options: [
-					{
-						name: 'Previous Node',
-						value: 'previousNode',
-						description: 'Get data from previous node',
-					},
-					{
-						name: 'Input',
-						value: 'input',
-						description: 'Use data from the input',
-					},
+					{ name: 'Previous Node', value: 'previousNode', description: 'Get data from previous node' },
+					{ name: 'Input', value: 'input', description: 'Use data from the input' },
 				],
 				default: 'previousNode',
 			},
-			// If the data source is previous node, we will not show the jobData fields array
 			{
 				displayName: 'Job Data',
 				name: 'jobData',
 				type: 'assignmentCollection',
-				displayOptions: {
-					show: {
-						operation: ['add'],
-						dataSource: ['input'],
-					},
-				},
+				displayOptions: { show: { operation: ['add'], dataSource: ['input'] } },
 				default: {},
 			},
 			{
 				displayName: 'Wait Until Finished',
 				name: 'waitUntilFinished',
 				type: 'boolean',
-				displayOptions: {
-					show: {
-						operation: ['add'],
-					},
-				},
+				displayOptions: { show: { operation: ['add'] } },
 				default: false,
 				description: 'Whether to wait until the job is finished, Don\'t use this option for long running jobs',
+			},
+			{
+				displayName: 'Encryption',
+				name: 'encryption',
+				type: 'collection',
+				placeholder: 'Encryption options',
+				displayOptions: { show: { operation: ['add'] } },
+				default: {},
+				options: [
+					{ displayName: 'Encrypt Payload', name: 'enabled', type: 'boolean', default: false },
+					{
+						displayName: 'Key Source',
+						name: 'keySource',
+						type: 'options',
+						options: [
+							{ name: 'Credential', value: 'credential' },
+							{ name: 'Inline', value: 'inline' },
+						],
+						default: 'credential',
+						displayOptions: { show: { enabled: [true] } },
+					},
+					{
+						displayName: 'Inline Key',
+						name: 'inlineKey',
+						type: 'string',
+						typeOptions: { password: true },
+						description: '32-byte key in base64 or 64-char hex',
+						default: '',
+						displayOptions: { show: { enabled: [true], keySource: ['inline'] } },
+					},
+				],
 			},
 			{
 				displayName: 'Options',
 				name: 'options',
 				type: 'collection',
 				placeholder: 'Add option',
-				displayOptions: {
-					show: {
-						operation: ['add'],
-					},
-				},
+				displayOptions: { show: { operation: ['add'] } },
 				default: {},
 				options: [
-					{
-						displayName: 'timeToLive',
-						name: 'timeToLive',
-						type: 'number',
-						default: 0,
-						description: 'Time in milliseconds before the job should be failed',
-					},
-					{
-						displayName: 'Retunrn Value',
-						name: 'returnValue',
-						type: 'boolean',
-						default: false,
-						description: 'Whether to return the value of the job',
-					},
-					{
-						displayName: 'Delay',
-						name: 'delay',
-						type: 'number',
-						default: 0,
-						description: 'Delay in milliseconds before the job should be processed',
-					},
-					{
-						displayName: 'Priority',
-						name: 'priority',
-						type: 'number',
-						default: 0,
-						description: 'Priority of the jobb, from 1 to any, higher is higher priority',
-					},
-					{
-						displayName: 'Attempts',
-						name: 'attempts',
-						type: 'number',
-						default: 0,
-						description: 'Number of attempts to run the job',
-					},
-					{
-						displayName: 'Backoff',
-						name: 'backoff',
-						type: 'number',
-						default: 0,
-						description: 'Backoff time in milliseconds',
-					},
-					{
-						displayName: 'Lifo',
-						name: 'lifo',
-						type: 'boolean',
-						default: false,
-						description: 'Whether to process the job in LIFO order, otherwise FIFO',
-					},
-					{
-						displayName: 'Remove On Complete',
-						name: 'removeOnComplete',
-						type: 'boolean',
-						default: false,
-						description: 'Whether to remove the job from the queue when it is completed',
-					},
-					{
-						displayName: 'Remove On Fail',
-						name: 'removeOnFail',
-						type: 'boolean',
-						default: false,
-						description: 'Whether to remove the job from the queue when it fails',
-					}
-				]
+					{ displayName: 'Attempts', name: 'attempts', type: 'number', default: 0, description: 'Number of attempts to run the job' },
+					{ displayName: 'Backoff', name: 'backoff', type: 'number', default: 0, description: 'Backoff time in milliseconds' },
+					{ displayName: 'Delay', name: 'delay', type: 'number', default: 0, description: 'Delay in milliseconds before the job should be processed' },
+					{ displayName: 'Lifo', name: 'lifo', type: 'boolean', default: false, description: 'Whether to process the job in LIFO order, otherwise FIFO' },
+					{ displayName: 'Priority', name: 'priority', type: 'number', default: 0, description: 'Priority of the jobb, from 1 to any, higher is higher priority' },
+					{ displayName: 'Remove On Complete', name: 'removeOnComplete', type: 'boolean', default: false, description: 'Whether to remove the job from the queue when it is completed' },
+					{ displayName: 'Remove On Fail', name: 'removeOnFail', type: 'boolean', default: false, description: 'Whether to remove the job from the queue when it fails' },
+					{ displayName: 'Retunrn Value', name: 'returnValue', type: 'boolean', default: false, description: 'Whether to return the value of the job' },
+					{ displayName: 'timeToLive', name: 'timeToLive', type: 'number', default: 0, description: 'Time in milliseconds before the job should be failed' },
+				],
 			},
-
 		],
 	};
 
@@ -336,7 +266,27 @@ export class Bullmq implements INodeType {
 						parseJson(inputItem.json as any, {}) :
 						parseAssignmentsCollection(messageData as any, {});
 
-					const job = await queue.add(jobName, jsonPayload, {
+					// Handle optional encryption
+					const encryption = (this.getNodeParameter('encryption', itemIndex, {}) as any) || {};
+					const shouldEncrypt = Boolean(encryption.enabled);
+					let key: string | undefined;
+					if (shouldEncrypt) {
+						if (encryption.keySource === 'inline') {
+							key = encryption.inlineKey as string;
+						} else {
+							try {
+								const creds = await this.getCredentials('bullMqEncryptionKeyApi');
+								key = (creds as any)?.key as string;
+							} catch {}
+						}
+						if (!key) {
+							throw new NodeOperationError(this.getNode(), 'Encryption enabled but no key provided (credential missing or inline key empty).', { itemIndex });
+						}
+					}
+
+					const payloadToSend = shouldEncrypt ? encryptPayload(jsonPayload, key as string) : jsonPayload;
+
+					const job = await queue.add(jobName, payloadToSend, {
 						delay,
 						priority,
 						attempts,
