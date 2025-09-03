@@ -1,6 +1,6 @@
 import type { ICredentialType, INodeProperties } from 'n8n-workflow';
 
-export default class BullmqEncryptionKeyApi implements ICredentialType {
+export class BullmqEncryptionKeyApi implements ICredentialType {
   name = 'bullMqEncryptionKeyApi';
   displayName = 'BullMQ Encryption Key API';
   properties: INodeProperties[] = [
@@ -15,3 +15,5 @@ export default class BullmqEncryptionKeyApi implements ICredentialType {
     },
   ];
 }
+
+export default BullmqEncryptionKeyApi;

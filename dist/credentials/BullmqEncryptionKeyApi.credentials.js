@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.BullmqEncryptionKeyApi = void 0;
 class BullmqEncryptionKeyApi {
     constructor() {
         this.name = 'bullMqEncryptionKeyApi';
@@ -17,5 +18,6 @@ class BullmqEncryptionKeyApi {
         ];
     }
 }
+exports.BullmqEncryptionKeyApi = BullmqEncryptionKeyApi;
 exports.default = BullmqEncryptionKeyApi;
 //# sourceMappingURL=BullmqEncryptionKeyApi.credentials.js.map
