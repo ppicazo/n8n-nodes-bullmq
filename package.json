@@ -28,7 +28,9 @@
   ],
   "n8n": {
     "n8nNodesApiVersion": 1,
-    "credentials": [],
+    "credentials": [
+      "dist/credentials/BullmqEncryptionKeyApi.credentials.js"
+    ],
     "nodes": [
       "dist/nodes/Bullmq/Bullmq.node.js",
       "dist/nodes/Bullmq/BullmqTrigger.node.js",
@@ -36,6 +38,7 @@
     ]
   },
   "devDependencies": {
+  "@types/node": "^22.7.4",
     "@typescript-eslint/parser": "^7.15.0",
     "eslint": "^8.56.0",
     "eslint-plugin-n8n-nodes-base": "^1.16.1",
