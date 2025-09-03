@@ -1,0 +1,57 @@
+{
+    "name": "n8n-nodes-bullmq",
+    "version": "0.6.0",
+    "description": "N8n nodes for BullMQ",
+    "keywords": [
+        "n8n-community-node-package"
+    ],
+    "license": "MIT",
+    "author": {
+        "name": "@filipeborges",
+        "email": "filipe@wingmaite.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/FilipeBorges1993/n8n-nodes-bullmq.git"
+    },
+    "main": "index.js",
+    "scripts": {
+        "build": "tsc && gulp build:icons",
+        "dev": "tsc --watch",
+        "format": "prettier nodes credentials --write",
+        "lint": "eslint nodes credentials package.json --no-error-on-unmatched-pattern",
+        "lintfix": "eslint nodes credentials package.json --fix --no-error-on-unmatched-pattern",
+        "prepublishOnly": "npm run build && npm run lint --no-error-on-unmatched-pattern -c .eslintrc.prepublish.js nodes credentials package.json"
+    },
+    "files": [
+        "dist"
+    ],
+    "n8n": {
+        "n8nNodesApiVersion": 1,
+        "credentials": [
+            "dist/credentials/BullmqEncryptionKeyApi.credentials.js"
+        ],
+        "nodes": [
+            "dist/nodes/Bullmq/Bullmq.node.js",
+            "dist/nodes/Bullmq/BullmqTrigger.node.js",
+            "dist/nodes/Bullmq/BullmqRespond.node.js"
+        ]
+    },
+    "devDependencies": {
+        "@types/node": "^22.7.4",
+        "@typescript-eslint/parser": "^7.15.0",
+        "eslint": "^8.56.0",
+        "eslint-plugin-n8n-nodes-base": "^1.16.1",
+        "gulp": "^4.0.2",
+        "n8n-workflow": "*",
+        "prettier": "^3.3.2",
+        "typescript": "^5.5.3"
+    },
+    "peerDependencies": {
+        "n8n-workflow": "*"
+    },
+    "dependencies": {
+        "bullmq": "^5.12.14",
+        "ioredis": "^5.4.1"
+    }
+}

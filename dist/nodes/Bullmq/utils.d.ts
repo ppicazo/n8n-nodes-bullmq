@@ -1,0 +1,11 @@
+import type { AssignmentCollectionValue, ICredentialDataDecryptedObject, IDataObject, ITaskData } from 'n8n-workflow';
+import IORedis from 'ioredis';
+import { Processor, Worker, WorkerOptions } from 'bullmq';
+export type RedisClientType = IORedis;
+export declare function setupRedisClient(credentials: ICredentialDataDecryptedObject): RedisClientType;
+export declare function convertInfoToObject(stringData: string): IDataObject;
+export declare function createWorker<DataType, ResultType, NameType extends string>(queueName: string, handler: string | null | Processor<DataType, ResultType, NameType>, extraOptions: WorkerOptions): Worker<DataType, ResultType, NameType>;
+export declare function parseJson(jsonString: any, fallback: any): IDataObject;
+export declare function craftJobReturnValue(json: any): any;
+export declare function parseAssignmentsCollection(collection: AssignmentCollectionValue, fallback: IDataObject): IDataObject;
+export declare function extractNodeExecutionResultData(executionResult: ITaskData[]): IDataObject;
