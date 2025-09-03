@@ -60,6 +60,12 @@ export class Bullmq implements INodeType {
 			{
 				name: 'bullMqEncryptionKeyApi',
 				required: false,
+				displayOptions: {
+					show: {
+						'encryption.enabled': [true],
+						'encryption.keySource': ['credential'],
+					},
+				},
 			},
 		],
 		properties: [
@@ -69,13 +75,6 @@ export class Bullmq implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				options: [
-					{
-						displayName: 'Job ID',
-						name: 'jobId',
-						type: 'string',
-						default: '',
-						description: 'Custom job ID to assign to the job (optional)',
-					},
 					{
 						name: 'Add',
 						value: 'add',
@@ -189,34 +188,6 @@ export class Bullmq implements INodeType {
 				default: {},
 				options: [
 					{
-						displayName: 'timeToLive',
-						name: 'timeToLive',
-						type: 'number',
-						default: 0,
-						description: 'Time in milliseconds before the job should be failed',
-					},
-					{
-						displayName: 'Return Value',
-						name: 'returnValue',
-						type: 'boolean',
-						default: false,
-						description: 'Whether to return the value of the job',
-					},
-					{
-						displayName: 'Delay',
-						name: 'delay',
-						type: 'number',
-						default: 0,
-						description: 'Delay in milliseconds before the job should be processed',
-					},
-					{
-						displayName: 'Priority',
-						name: 'priority',
-						type: 'number',
-						default: 0,
-						description: 'Priority of the job, from 1 to any, higher is higher priority',
-					},
-					{
 						displayName: 'Attempts',
 						name: 'attempts',
 						type: 'number',
@@ -231,11 +202,32 @@ export class Bullmq implements INodeType {
 						description: 'Backoff time in milliseconds',
 					},
 					{
+						displayName: 'Delay',
+						name: 'delay',
+						type: 'number',
+						default: 0,
+						description: 'Delay in milliseconds before the job should be processed',
+					},
+					{
+						displayName: 'Job ID',
+						name: 'jobId',
+						type: 'string',
+						default: '',
+						description: 'Custom job ID to assign to the job (optional)',
+					},
+					{
 						displayName: 'Lifo',
 						name: 'lifo',
 						type: 'boolean',
 						default: false,
 						description: 'Whether to process the job in LIFO order, otherwise FIFO',
+					},
+					{
+						displayName: 'Priority',
+						name: 'priority',
+						type: 'number',
+						default: 0,
+						description: 'Priority of the job, from 1 to any, higher is higher priority',
 					},
 					{
 						displayName: 'Remove On Complete',
@@ -250,6 +242,20 @@ export class Bullmq implements INodeType {
 						type: 'boolean',
 						default: false,
 						description: 'Whether to remove the job from the queue when it fails',
+					},
+					{
+						displayName: 'Return Value',
+						name: 'returnValue',
+						type: 'boolean',
+						default: false,
+						description: 'Whether to return the value of the job',
+					},
+					{
+						displayName: 'timeToLive',
+						name: 'timeToLive',
+						type: 'number',
+						default: 0,
+						description: 'Time in milliseconds before the job should be failed',
 					}
 				]
 			},
