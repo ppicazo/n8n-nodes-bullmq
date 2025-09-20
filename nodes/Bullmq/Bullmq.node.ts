@@ -419,8 +419,13 @@ export class Bullmq implements INodeType {
 
 			}
 		} finally {
-			if(connection.status === 'ready') {
-				await connection.quit();
+			if (connection.status === 'ready') {
+				try {
+					await connection.quit();
+				} catch (quitError) {
+					// Optionally log the error, but do not rethrow to avoid masking original errors
+					// console.error('Error during Redis connection cleanup:', quitError);
+				}
 			}
 		}
 
