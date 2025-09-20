@@ -284,141 +284,146 @@ export class Bullmq implements INodeType {
 
 		const items = this.getInputData();
 
-		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
-			const inputItem = items[itemIndex];
-			const item: INodeExecutionData = { json: {}, pairedItem: { item: itemIndex } };
+		try {
+			for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+				const inputItem = items[itemIndex];
+				const item: INodeExecutionData = { json: {}, pairedItem: { item: itemIndex } };
 
-			try {
-				if (operation === 'add') {
+				try {
+					if (operation === 'add') {
 
-					const workflowInfo = await getWorkflowInfo.call(this, source, itemIndex);
+						const workflowInfo = await getWorkflowInfo.call(this, source, itemIndex);
 
-					if (!workflowInfo.id) {
-						throw new NodeOperationError(
-							this.getNode(),
-							`The workflow did not return an id!`,
-						);
-					}
-
-					const queueName = workflowInfo.id;
-
-					const jobName = this.getNodeParameter('jobName', itemIndex) as INodeParameters['jobName'];
-					const dataSource = this.getNodeParameter('dataSource', itemIndex) as INodeParameters['dataSource'];
-					const messageData = this.getNodeParameter('jobData', itemIndex, {}) as INodeParameters['jobData'];
-
-					const options = this.getNodeParameter('options', itemIndex) as IAddOptions;
-
-					const {
-						timeToLive,
-						delay = 0,
-						priority = 1,
-						attempts = 1,
-						backoff = 0,
-						lifo = false,
-						removeOnComplete = false,
-						removeOnFail = false,
-						returnValue = false,
-					} = options;
-
-					const queue = await getQueue.call(this, queueName, { connection });
-
-					const cleanup = async () => {
-						try {
-							queue.close();
-							queue.disconnect();
-						} catch (error) {
-							// @ts-ignore
-							console.log(error);
+						if (!workflowInfo.id) {
+							throw new NodeOperationError(
+								this.getNode(),
+								`The workflow did not return an id!`,
+							);
 						}
-					}
 
-					const jsonPayload = dataSource === 'previousNode' ?
-						parseJson(inputItem.json as any, {}) :
-						parseAssignmentsCollection(messageData as any, {});
+						const queueName = workflowInfo.id;
 
-					const job = await queue.add(jobName, jsonPayload, {
-						delay,
-						priority,
-						attempts,
-						backoff,
-						lifo,
-						removeOnComplete,
-						removeOnFail,
-					});
+						const jobName = this.getNodeParameter('jobName', itemIndex) as INodeParameters['jobName'];
+						const dataSource = this.getNodeParameter('dataSource', itemIndex) as INodeParameters['dataSource'];
+						const messageData = this.getNodeParameter('jobData', itemIndex, {}) as INodeParameters['jobData'];
 
-					job.log(`Job added from executionId ${this.getExecutionId()}`);
+						const options = this.getNodeParameter('options', itemIndex) as IAddOptions;
 
-					// If the option to wait until the job is finished is set wait for it
-					const waitUntilFinished = this.getNodeParameter(
-						'waitUntilFinished',
-						itemIndex,
-					) as boolean;
+						const {
+							timeToLive,
+							delay = 0,
+							priority = 1,
+							attempts = 1,
+							backoff = 0,
+							lifo = false,
+							removeOnComplete = false,
+							removeOnFail = false,
+							returnValue = false,
+						} = options;
 
-					if (waitUntilFinished) {
-						const queueEvents = new QueueEvents(queueName, { connection });
+						const queue = await getQueue.call(this, queueName, { connection });
 
-						const cleanupQueueEvents = async () => {
+						const cleanup = async () => {
 							try {
-								queueEvents.close();
-								queueEvents.disconnect();
+								await queue.close();
 							} catch (error) {
 								// @ts-ignore
 								console.log(error);
 							}
 						}
 
-						await job.waitUntilFinished(queueEvents, +timeToLive);
+						const jsonPayload = dataSource === 'previousNode' ?
+							parseJson(inputItem.json as any, {}) :
+							parseAssignmentsCollection(messageData as any, {});
 
-						if (!job.id) {
-							cleanupQueueEvents();
-							cleanup();
-							throw new NodeOperationError(
-								this.getNode(),
-								`The job did not return an id!`,
-							);
-						}
+						const job = await queue.add(jobName, jsonPayload, {
+							delay,
+							priority,
+							attempts,
+							backoff,
+							lifo,
+							removeOnComplete,
+							removeOnFail,
+						});
 
-						const updatedJob = await queue.getJob(job.id);
+						job.log(`Job added from executionId ${this.getExecutionId()}`);
 
-						if (updatedJob) {
-							item.json = updatedJob.toJSON();
+						// If the option to wait until the job is finished is set wait for it
+						const waitUntilFinished = this.getNodeParameter(
+							'waitUntilFinished',
+							itemIndex,
+						) as boolean;
+
+						if (waitUntilFinished) {
+							const queueEvents = new QueueEvents(queueName, { connection });
+
+							const cleanupQueueEvents = async () => {
+								try {
+									await queueEvents.close();
+								} catch (error) {
+									// @ts-ignore
+									console.log(error);
+								}
+							}
+
+							await job.waitUntilFinished(queueEvents, +timeToLive);
+
+							if (!job.id) {
+								await cleanupQueueEvents();
+								await cleanup();
+								throw new NodeOperationError(
+									this.getNode(),
+									`The job did not return an id!`,
+								);
+							}
+
+							const updatedJob = await queue.getJob(job.id);
+
+							if (updatedJob) {
+								item.json = updatedJob.toJSON();
+							} else {
+								item.json = job.toJSON();
+							}
+
+							if (returnValue) {
+								item.json = craftJobReturnValue(item.json.returnvalue);
+							}
+
+							items[itemIndex] = item;
+							returnItems.push(items[itemIndex]);
+
+							await cleanupQueueEvents();
 						} else {
 							item.json = job.toJSON();
+							items[itemIndex] = item;
+							returnItems.push(items[itemIndex]);
 						}
 
-						if (returnValue) {
-							item.json = craftJobReturnValue(item.json.returnvalue);
-						}
-
-						items[itemIndex] = item;
-						returnItems.push(items[itemIndex]);
-
-						cleanupQueueEvents();
+						await cleanup();
 					} else {
-						item.json = job.toJSON();
-						items[itemIndex] = item;
-						returnItems.push(items[itemIndex]);
-					}
-
-					cleanup();
-				} else {
-					throw new NodeOperationError(this.getNode(), `The operation "${operation}" is not supported!`, { itemIndex });
-				};
-
-			} catch (error) {
-				if (this.continueOnFail()) {
-					items[itemIndex] = {
-						json: inputItem.json,
-						error,
-						pairedItem: { item: itemIndex },
+						throw new NodeOperationError(this.getNode(), `The operation "${operation}" is not supported!`, { itemIndex });
 					};
-					returnItems.push(items[itemIndex]);
-				} else {
-					throw new NodeOperationError(this.getNode(), `The operation "${error.message}" is not supported!`, { itemIndex });
-				}
-			}
 
+				} catch (error) {
+					if (this.continueOnFail()) {
+						items[itemIndex] = {
+							json: inputItem.json,
+							error,
+							pairedItem: { item: itemIndex },
+						};
+						returnItems.push(items[itemIndex]);
+					} else {
+						throw new NodeOperationError(this.getNode(), `The operation "${error.message}" is not supported!`, { itemIndex });
+					}
+				}
+
+			}
+		} finally {
+			if(connection.status === 'ready') {
+				await connection.quit();
+			}
 		}
+
 
 		return [returnItems];
 	}
