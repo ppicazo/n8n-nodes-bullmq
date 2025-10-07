@@ -7,11 +7,7 @@ import type {
 } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 
-import {
-	parseAssignmentsCollection,
-	parseJson,
-	setupRedisClient,
-} from './utils';
+import { parseAssignmentsCollection, parseJson, setupRedisClient } from './utils';
 import { getQueue, redisConnectionTest } from './GenericFuntions';
 
 export class BullmqRespond implements INodeType {
@@ -201,7 +197,7 @@ export class BullmqRespond implements INodeType {
 							const cleanup = async () => {
 								queue.close();
 								queue.disconnect();
-							}
+							};
 
 							const job = await queue.getJob(jobId);
 
@@ -246,8 +242,7 @@ export class BullmqRespond implements INodeType {
 	}
 }
 
-
-function 	getJobInfo(this: IExecuteFunctions, itemIndex: number) {
+function getJobInfo(this: IExecuteFunctions, itemIndex: number) {
 	const useCurrentJobData = this.getNodeParameter('useCurrentJobData', itemIndex, true) as boolean;
 
 	if (useCurrentJobData) {

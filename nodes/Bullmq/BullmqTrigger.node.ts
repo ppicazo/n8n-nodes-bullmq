@@ -44,20 +44,20 @@ export class BullmqTrigger implements INodeType {
 		],
 		properties: [
 			{
-				displayName: "Queue Source",
-				name: "queueSource",
-				type: "options",
+				displayName: 'Queue Source',
+				name: 'queueSource',
+				type: 'options',
 				options: [
 					{
-						name: "Workflows",
-						value: "workflows",
+						name: 'Workflows',
+						value: 'workflows',
 					},
 					{
-						name: "Custom",
-						value: "custom",
+						name: 'Custom',
+						value: 'custom',
 					},
 				],
-				default: "workflows",
+				default: 'workflows',
 			},
 			{
 				displayName: 'Queue Name',
@@ -68,9 +68,7 @@ export class BullmqTrigger implements INodeType {
 				description: 'Queue name to add the job to',
 				displayOptions: {
 					show: {
-						queueSource: [
-							"custom"
-						]
+						queueSource: ['custom'],
 					},
 				},
 			},
@@ -269,7 +267,7 @@ export class BullmqTrigger implements INodeType {
 						throw new NodeOperationError(this.getNode(), 'Done promise is missing');
 					}
 
-					const result = await donePromise.promise();
+					const result = await donePromise.promise;
 
 					// parse error
 					const lastNodeResult = result.data.resultData;

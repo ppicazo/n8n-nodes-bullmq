@@ -1,7 +1,9 @@
 import type {
 	AssignmentCollectionValue,
-	ICredentialDataDecryptedObject, IDataObject, INodeExecutionData,
-	ITaskData
+	ICredentialDataDecryptedObject,
+	IDataObject,
+	INodeExecutionData,
+	ITaskData,
 } from 'n8n-workflow';
 
 import IORedis, { RedisOptions } from 'ioredis';
@@ -22,7 +24,6 @@ export function setupRedisClient(credentials: ICredentialDataDecryptedObject): R
 
 	return connection;
 }
-
 
 /** Parses the given value in a number if it is one else returns a string */
 function getParsedValue(value: string): string | number {
@@ -65,15 +66,14 @@ export function convertInfoToObject(stringData: string): IDataObject {
 	return returnData;
 }
 
-
-
 export function createWorker<DataType, ResultType, NameType extends string>(
-queueName: string, handler: string | null | Processor<DataType, ResultType, NameType>, extraOptions: WorkerOptions,
+	queueName: string,
+	handler: string | null | Processor<DataType, ResultType, NameType>,
+	extraOptions: WorkerOptions,
 ): Worker<DataType, ResultType, NameType> {
 	const worker = new Worker(queueName, handler, extraOptions);
 	return worker as unknown as Worker<DataType, ResultType, NameType>;
 }
-
 
 export function parseJson(jsonString: any, fallback: any): IDataObject {
 	try {
@@ -87,7 +87,6 @@ export function parseJson(jsonString: any, fallback: any): IDataObject {
 	}
 }
 
-
 export function craftJobReturnValue(json: any) {
 	if (typeof json !== 'object') {
 		return json;
@@ -95,9 +94,8 @@ export function craftJobReturnValue(json: any) {
 
 	return {
 		data: json.data,
-	}
+	};
 }
-
 
 export function parseAssignmentsCollection(
 	collection: AssignmentCollectionValue,
@@ -106,17 +104,15 @@ export function parseAssignmentsCollection(
 	try {
 		const returnData = Object.fromEntries(
 			collection.assignments.map(({ name, value }) => {
-				return [name, value]
-			}
-		));
+				return [name, value];
+			}),
+		);
 
 		return returnData;
-	}  catch (error) {
+	} catch (error) {
 		return fallback;
 	}
 }
-
-
 
 export function extractNodeExecutionResultData(executionResult: ITaskData[]): IDataObject {
 	if (!executionResult) {

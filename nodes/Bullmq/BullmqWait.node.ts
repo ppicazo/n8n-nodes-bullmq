@@ -7,10 +7,9 @@ import type {
 	IWebhookResponseData,
 	Node,
 } from 'n8n-workflow';
-import { NodeOperationError, WAIT_TIME_UNLIMITED } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import { getQueue, redisConnectionTest } from './GenericFuntions';
 import { setupRedisClient } from './utils';
-
 
 // import { setupRedisClient, redisConnectionTest, getQueue } from './utils';
 
@@ -212,9 +211,9 @@ export class BullmqWait implements Node {
 
 		return {
 			webhookResponse: { ok: true },
-			workflowData: [[{ json:  {} }]],
+			workflowData: [[{ json: {} }]],
 			noWebhookResponse: false,
-		}
+		};
 	}
 
 	async execute(this: IExecuteFunctions) {
@@ -275,12 +274,11 @@ export class BullmqWait implements Node {
 			throw error;
 		}
 
-		const waitTill = new Date(WAIT_TIME_UNLIMITED);
+		const waitTill = new Date('9999-12-31');
 
 		return putToWait(this, waitTill);
 	}
 }
-
 
 async function putToWait(context: IExecuteFunctions, waitTill: Date) {
 	await context.putExecutionToWait(waitTill);
